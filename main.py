@@ -225,6 +225,10 @@ class MainWindow(QMainWindow):
         self.results_table.horizontalHeader().setStretchLastSection(True)
         self.results_table.setColumnWidth(0, 80)
         self.results_table.setColumnWidth(1, 150)
+        # Настройка для многострочного отображения в колонке "Ответ"
+        self.results_table.verticalHeader().setDefaultSectionSize(100)  # Высота строки по умолчанию
+        self.results_table.setWordWrap(True)  # Включить перенос слов
+        self.results_table.setSelectionBehavior(QAbstractItemView.SelectRows)  # Выбор целой строки
         main_layout.addWidget(self.results_table)
         
         # Кнопки управления
@@ -235,12 +239,20 @@ class MainWindow(QMainWindow):
         self.save_button.setEnabled(False)
         buttons_layout.addWidget(self.save_button)
         
+        self.open_button = QPushButton("Открыть")
+        self.open_button.clicked.connect(self.on_open_selected_result)
+        self.open_button.setEnabled(False)
+        buttons_layout.addWidget(self.open_button)
+        
         self.clear_button = QPushButton("Очистить")
         self.clear_button.clicked.connect(self.on_clear_clicked)
         buttons_layout.addWidget(self.clear_button)
         
         buttons_layout.addStretch()
         main_layout.addLayout(buttons_layout)
+        
+        # Подключаем обработчик выбора строки для активации кнопки "Открыть"
+        self.results_table.itemSelectionChanged.connect(self.on_selection_changed)
         
         # Статусная строка
         self.statusBar().showMessage("Готово")
@@ -361,7 +373,7 @@ class MainWindow(QMainWindow):
             model_item = QTableWidgetItem(result.get('model_name', 'Unknown'))
             self.results_table.setItem(row, 1, model_item)
             
-            # Ответ
+            # Ответ (многострочное поле)
             if result.get('success'):
                 response_text = result.get('response', 'Нет ответа')
                 response_item = QTableWidgetItem(response_text)
@@ -371,6 +383,16 @@ class MainWindow(QMainWindow):
                 response_text = f"❌ {error_msg}"
                 response_item = QTableWidgetItem(response_text)
                 response_item.setForeground(Qt.red)  # Красный цвет для ошибок
+            
+            # Настройка многострочного отображения
+            response_item.setTextAlignment(Qt.AlignTop | Qt.AlignLeft)  # Выравнивание по верху и слева
+            response_item.setFlags(response_item.flags() | Qt.TextWordWrap)  # Разрешить перенос слов
+            
+            # Вычисляем высоту строки на основе длины текста
+            text_lines = len(response_text.split('\n')) + (len(response_text) // 80)  # Примерно 80 символов на строку
+            min_height = max(100, min(300, text_lines * 25))  # Минимум 100, максимум 300 пикселей
+            self.results_table.setRowHeight(row, min_height)
+            
             self.results_table.setItem(row, 2, response_item)
         
         self.on_checkbox_changed()  # Обновляем состояние кнопки сохранения
@@ -440,7 +462,60 @@ class MainWindow(QMainWindow):
         self.temp_results.clear()
         self.results_table.setRowCount(0)
         self.save_button.setEnabled(False)
+        self.open_button.setEnabled(False)
         self.statusBar().showMessage("Очищено")
+    
+    def on_selection_changed(self):
+        """Обработчик изменения выбора строки в таблице"""
+        selected_rows = self.results_table.selectionModel().selectedRows()
+        self.open_button.setEnabled(len(selected_rows) > 0)
+    
+    def on_open_selected_result(self):
+        """Обработчик кнопки 'Открыть' для просмотра выбранного результата в Markdown"""
+        selected_rows = self.results_table.selectionModel().selectedRows()
+        if not selected_rows:
+            QMessageBox.warning(self, "Ошибка", "Выберите строку для просмотра!")
+            return
+        
+        row = selected_rows[0].row()
+        if row < 0 or row >= len(self.temp_results):
+            return
+        
+        result = self.temp_results[row]
+        model_name = result.get('model_name', 'Unknown')
+        
+        if result.get('success'):
+            response_text = result.get('response', 'Нет ответа')
+        else:
+            error_msg = result.get('error', 'Неизвестная ошибка')
+            response_text = f"# Ошибка\n\n{error_msg}"
+        
+        # Получаем промт из текстового поля
+        prompt_text = self.prompt_text.toPlainText().strip()
+        
+        # Создаем Markdown контент
+        from datetime import datetime
+        md_content = f"""# Результат от модели: {model_name}
+
+**Дата:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+---
+
+## Промт
+
+{prompt_text}
+
+---
+
+## Ответ
+
+{response_text}
+"""
+        
+        # Открываем диалог просмотра
+        from markdown_viewer import MarkdownViewDialog
+        dialog = MarkdownViewDialog(self, md_content, model_name)
+        dialog.exec_()
     
     def on_new_prompt(self):
         """Создать новый промт"""

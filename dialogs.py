@@ -351,11 +351,26 @@ class ResultsDialog(QDialog):
         results = self.db.get_results(search=search if search else None, order_by=order_by)
         
         self.table.setRowCount(len(results))
+        self.table.setWordWrap(True)  # Включить перенос слов
+        self.table.verticalHeader().setDefaultSectionSize(100)  # Высота строки по умолчанию
+        
         for row, result in enumerate(results):
             self.table.setItem(row, 0, QTableWidgetItem(str(result.get('id', ''))))
             self.table.setItem(row, 1, QTableWidgetItem(result.get('prompt_text', '')[:100]))
             self.table.setItem(row, 2, QTableWidgetItem(result.get('model_name', '')))
-            self.table.setItem(row, 3, QTableWidgetItem(result.get('response_text', '')[:200]))
+            
+            # Ответ с многострочным отображением
+            response_text = result.get('response_text', '')
+            response_item = QTableWidgetItem(response_text)
+            response_item.setTextAlignment(Qt.AlignTop | Qt.AlignLeft)
+            response_item.setFlags(response_item.flags() | Qt.TextWordWrap)
+            
+            # Вычисляем высоту строки на основе длины текста
+            text_lines = len(response_text.split('\n')) + (len(response_text) // 80)
+            min_height = max(100, min(300, text_lines * 25))
+            self.table.setRowHeight(row, min_height)
+            
+            self.table.setItem(row, 3, response_item)
             self.table.setItem(row, 4, QTableWidgetItem(result.get('created_at', '')))
     
     def export_to_markdown(self):

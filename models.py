@@ -291,7 +291,10 @@ class OpenRouterModel(Model):
                 }
         except requests.exceptions.HTTPError as e:
             # Обработка HTTP ошибок (когда raise_for_status() вызывается)
-            error_message = self._parse_openrouter_error(e.response if hasattr(e, 'response') and e.response else None)
+            response_obj = None
+            if hasattr(e, 'response') and e.response is not None:
+                response_obj = e.response
+            error_message = self._parse_openrouter_error(response_obj)
             return {
                 'success': False,
                 'response': None,
@@ -334,45 +337,68 @@ class OpenRouterModel(Model):
     
     def _parse_openrouter_error(self, response):
         """Парсинг ошибок OpenRouter API для понятных сообщений"""
-        status_code = response.status_code if response else None
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        if not response:
+            logger.warning(f"OpenRouterModel._parse_openrouter_error: response is None для модели {self.api_id}")
+            return f'Ошибка подключения к OpenRouter. Проверьте интернет-соединение и правильность API-ключа.'
+        
+        status_code = response.status_code if hasattr(response, 'status_code') else None
         
         # Пытаемся извлечь детали ошибки из ответа
         error_detail = ""
+        response_text = ""
         try:
             if response:
-                error_data = response.json()
-                if 'error' in error_data:
-                    if isinstance(error_data['error'], dict):
-                        error_detail = error_data['error'].get('message', '')
-                    else:
-                        error_detail = str(error_data['error'])
-        except:
-            pass
+                response_text = response.text[:200] if hasattr(response, 'text') else ""
+                try:
+                    error_data = response.json()
+                    if 'error' in error_data:
+                        if isinstance(error_data['error'], dict):
+                            error_detail = error_data['error'].get('message', '')
+                            if not error_detail:
+                                error_detail = str(error_data['error'])
+                        else:
+                            error_detail = str(error_data['error'])
+                except:
+                    # Если не удалось распарсить JSON, используем текст ответа
+                    if response_text:
+                        error_detail = response_text
+        except Exception as e:
+            error_detail = f"Не удалось обработать ответ: {str(e)}"
         
         if status_code == 400:
-            msg = 'Неверный запрос. Проверьте правильность имени модели и формат данных.'
+            msg = f'Неверный запрос для модели "{self.api_id}". Проверьте правильность имени модели и формат данных.'
             if error_detail:
-                msg += f' Детали: {error_detail}'
+                msg += f' Детали: {error_detail[:150]}'
             return msg
         elif status_code == 401:
             return 'Неверный API-ключ. Проверьте ключ OPENROUTER_API_KEY в файле .env'
         elif status_code == 402:
             return f'Требуется оплата. Модель "{self.api_id}" требует пополнения баланса на OpenRouter. Попробуйте бесплатную модель или пополните баланс.'
         elif status_code == 404:
-            return f'Модель "{self.api_id}" не найдена. Проверьте правильность имени модели на https://openrouter.ai/models'
+            return f'Модель "{self.api_id}" не найдена (404). Проверьте правильность имени модели на https://openrouter.ai/models. Возможно, имя модели изменилось или модель недоступна.'
         elif status_code == 429:
             return 'Превышен лимит запросов (Too Many Requests). Подождите 1-2 минуты и попробуйте снова. Возможно, вы превысили лимит бесплатных запросов.'
         elif status_code == 500:
-            return 'Ошибка сервера OpenRouter. Попробуйте позже.'
+            return 'Ошибка сервера OpenRouter (500). Попробуйте позже.'
         elif status_code:
-            msg = f'Ошибка {status_code}'
+            msg = f'Ошибка {status_code} при запросе к модели "{self.api_id}"'
             if error_detail:
-                msg += f': {error_detail}'
-            else:
-                msg += f': {str(response.text[:100]) if response else "Неизвестная ошибка"}'
+                msg += f': {error_detail[:150]}'
+            elif response_text:
+                msg += f': {response_text[:100]}'
             return msg
         else:
-            return 'Неизвестная ошибка при запросе к OpenRouter'
+            # Если статус код не определен, пытаемся извлечь информацию из текста ответа
+            logger.warning(f"OpenRouterModel._parse_openrouter_error: неизвестный статус код для модели {self.api_id}, response={response}, error_detail={error_detail[:100] if error_detail else 'None'}")
+            if error_detail:
+                return f'Ошибка при запросе к модели "{self.api_id}": {error_detail[:200]}'
+            elif response_text:
+                return f'Ошибка при запросе к модели "{self.api_id}": {response_text[:200]}'
+            else:
+                return f'Неизвестная ошибка при запросе к модели "{self.api_id}". Проверьте правильность имени модели на https://openrouter.ai/models и API-ключа в файле .env'
 
 
 class ModelFactory:
@@ -414,3 +440,4 @@ class ModelFactory:
     def register_model_type(cls, model_type: str, model_class: type):
         """Зарегистрировать новый тип модели"""
         cls._model_classes[model_type.lower()] = model_class
+
