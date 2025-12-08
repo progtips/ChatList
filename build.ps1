@@ -10,3 +10,4 @@ Write-Host "`nИсполняемый файл создан в папке dist\Py
 Write-Host "Для запуска: .\dist\PyQtApp.exe" -ForegroundColor Yellow
 
 
+
