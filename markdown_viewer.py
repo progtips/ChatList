@@ -24,6 +24,14 @@ class MarkdownViewDialog(QDialog):
         self.text_browser = QTextBrowser()
         self.text_browser.setOpenExternalLinks(True)
         
+        # Устанавливаем светлый фон для QTextBrowser
+        self.text_browser.setStyleSheet("""
+            QTextBrowser {
+                background-color: #ffffff;
+                color: #333333;
+            }
+        """)
+        
         # Настройка шрифта
         font = QFont("Consolas", 11)
         self.text_browser.setFont(font)
@@ -64,11 +72,18 @@ class MarkdownViewDialog(QDialog):
                     body {{
                         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
                         line-height: 1.6;
-                        color: #333;
+                        color: #333333 !important;
                         max-width: 1200px;
                         margin: 0 auto;
                         padding: 20px;
-                        background-color: #ffffff;
+                        background-color: #ffffff !important;
+                    }}
+                    p {{
+                        color: #333333 !important;
+                    }}
+                    div {{
+                        color: #333333 !important;
+                        background-color: #ffffff !important;
                     }}
                     h1 {{
                         color: #2c3e50;
@@ -87,23 +102,24 @@ class MarkdownViewDialog(QDialog):
                         margin-top: 25px;
                     }}
                     code {{
-                        background-color: #f4f4f4;
+                        background-color: #f4f4f4 !important;
+                        color: #333333 !important;
                         padding: 2px 6px;
                         border-radius: 3px;
                         font-family: 'Consolas', 'Monaco', monospace;
                         font-size: 0.9em;
                     }}
                     pre {{
-                        background-color: #2c3e50;
-                        color: #ecf0f1;
+                        background-color: #2c3e50 !important;
+                        color: #ecf0f1 !important;
                         padding: 15px;
                         border-radius: 5px;
                         overflow-x: auto;
                         border-left: 4px solid #3498db;
                     }}
                     pre code {{
-                        background-color: transparent;
-                        color: inherit;
+                        background-color: transparent !important;
+                        color: #ecf0f1 !important;
                         padding: 0;
                     }}
                     blockquote {{

@@ -34,7 +34,7 @@ class PromptsManageDialog(QDialog):
         
         search_layout.addWidget(QLabel("Сортировать по:"))
         self.sort_combo = QComboBox()
-        self.sort_combo.addItems(["Дата", "Промт", "Теги"])
+        self.sort_combo.addItems(["Дата", "Промт"])
         self.sort_combo.currentTextChanged.connect(self.load_prompts)
         search_layout.addWidget(self.sort_combo)
         
@@ -42,8 +42,8 @@ class PromptsManageDialog(QDialog):
         
         # Таблица промтов
         self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["ID", "Дата", "Промт", "Теги"])
+        self.table.setColumnCount(3)
+        self.table.setHorizontalHeaderLabels(["ID", "Дата", "Промт"])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -51,14 +51,21 @@ class PromptsManageDialog(QDialog):
         self.table.setColumnWidth(1, 150)
         layout.addWidget(self.table)
         
-        # Кнопки
+        # Кнопки CRUD
         buttons_layout = QHBoxLayout()
+        
+        self.create_button = QPushButton("Создать")
+        self.create_button.clicked.connect(self.on_create)
+        buttons_layout.addWidget(self.create_button)
+        
         self.edit_button = QPushButton("Редактировать")
         self.edit_button.clicked.connect(self.on_edit)
+        self.edit_button.setEnabled(False)
         buttons_layout.addWidget(self.edit_button)
         
         self.delete_button = QPushButton("Удалить")
         self.delete_button.clicked.connect(self.on_delete)
+        self.delete_button.setEnabled(False)
         buttons_layout.addWidget(self.delete_button)
         
         buttons_layout.addStretch()
@@ -66,6 +73,9 @@ class PromptsManageDialog(QDialog):
         close_button = QPushButton("Закрыть")
         close_button.clicked.connect(self.accept)
         buttons_layout.addWidget(close_button)
+        
+        # Подключаем обработчик выбора строки
+        self.table.itemSelectionChanged.connect(self.on_selection_changed)
         
         layout.addLayout(buttons_layout)
         self.setLayout(layout)
@@ -81,8 +91,7 @@ class PromptsManageDialog(QDialog):
         # Маппинг названий колонок
         sort_mapping = {
             "дата": "date",
-            "промт": "prompt",
-            "теги": "tags"
+            "промт": "prompt"
         }
         order_by = sort_mapping.get(sort_by, "date")
         
@@ -93,7 +102,23 @@ class PromptsManageDialog(QDialog):
             self.table.setItem(row, 0, QTableWidgetItem(str(prompt.get('id', ''))))
             self.table.setItem(row, 1, QTableWidgetItem(prompt.get('date', '')))
             self.table.setItem(row, 2, QTableWidgetItem(prompt.get('prompt', '')[:200]))
-            self.table.setItem(row, 3, QTableWidgetItem(prompt.get('tags', '')))
+    
+    def on_selection_changed(self):
+        """Обработчик изменения выбора строки"""
+        has_selection = len(self.table.selectedItems()) > 0
+        self.edit_button.setEnabled(has_selection)
+        self.delete_button.setEnabled(has_selection)
+    
+    def on_create(self):
+        """Создать новый промт"""
+        from main import PromptDialog
+        dialog = PromptDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+            data = dialog.get_data()
+            if data['prompt']:
+                self.db.create_prompt(data['prompt'], data['tags'] if data['tags'] else None)
+                self.load_prompts()
+                QMessageBox.information(self, "Успех", "Промт создан!")
     
     def on_edit(self):
         """Редактировать выбранный промт"""
