@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QLineEdit, QDialogButtonBox, QHeaderView, QAbstractItemView,
     QProgressBar
 )
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPoint
 from PyQt5.QtGui import QFont, QColor
 from db import Database
 from network import NetworkManager
@@ -201,6 +201,10 @@ class MainWindow(QMainWindow):
         self.prompt_combo.currentTextChanged.connect(self.on_prompt_changed)
         prompt_layout.addWidget(self.prompt_combo, 3)
         
+        self.improve_prompt_button = QPushButton("Улучшить промт")
+        self.improve_prompt_button.clicked.connect(self.on_improve_prompt_clicked)
+        prompt_layout.addWidget(self.improve_prompt_button)
+        
         self.send_button = QPushButton("Отправить")
         self.send_button.clicked.connect(self.on_send_clicked)
         prompt_layout.addWidget(self.send_button)
@@ -307,6 +311,41 @@ class MainWindow(QMainWindow):
         if not prompt_text:
             QMessageBox.warning(self, "Ошибка", "Введите промт!")
             return
+        
+        # Автоматически сохраняем промт в базу данных
+        try:
+            # Проверяем, не существует ли уже точно такой промт
+            all_prompts = self.db.get_prompts()
+            prompt_exists = False
+            existing_prompt_id = None
+            
+            for p in all_prompts:
+                if p['prompt'].strip() == prompt_text:
+                    prompt_exists = True
+                    existing_prompt_id = p['id']
+                    break
+            
+            if not prompt_exists:
+                # Сохраняем новый промт
+                prompt_id = self.db.create_prompt(prompt_text, None)
+                self.current_prompt_id = prompt_id
+                # Обновляем список промтов в комбобоксе
+                self.load_prompts()
+                # Выбираем только что сохраненный промт
+                index = self.prompt_combo.findData(prompt_id)
+                if index >= 0:
+                    self.prompt_combo.setCurrentIndex(index)
+                self.statusBar().showMessage("Промт сохранен")
+            else:
+                # Если промт уже существует, используем его ID
+                self.current_prompt_id = existing_prompt_id
+                # Обновляем выбор в комбобоксе
+                index = self.prompt_combo.findData(existing_prompt_id)
+                if index >= 0:
+                    self.prompt_combo.setCurrentIndex(index)
+        except Exception as e:
+            # Если не удалось сохранить, продолжаем работу
+            logging.warning(f"Не удалось сохранить промт: {str(e)}")
         
         # Очищаем временную таблицу
         self.temp_results.clear()
@@ -516,6 +555,54 @@ class MainWindow(QMainWindow):
         from markdown_viewer import MarkdownViewDialog
         dialog = MarkdownViewDialog(self, md_content, model_name)
         dialog.exec_()
+    
+    def on_prompt_context_menu(self, position: QPoint):
+        """Контекстное меню для поля ввода промта"""
+        menu = QMenu(self)
+        
+        improve_action = menu.addAction("Улучшить промт")
+        improve_action.triggered.connect(self.on_improve_prompt_clicked)
+        
+        # Показываем меню только если есть текст
+        prompt_text = self.prompt_text.toPlainText().strip()
+        improve_action.setEnabled(bool(prompt_text))
+        
+        menu.exec_(self.prompt_text.mapToGlobal(position))
+    
+    def on_improve_prompt_clicked(self):
+        """Обработчик кнопки 'Улучшить промт'"""
+        prompt_text = self.prompt_text.toPlainText().strip()
+        if not prompt_text:
+            QMessageBox.warning(self, "Ошибка", "Введите промт для улучшения!")
+            return
+        
+        # Получаем активные модели
+        models_data = self.db.get_active_models()
+        if not models_data:
+            QMessageBox.warning(self, "Ошибка", "Нет активных моделей! Добавьте модели в меню 'Модели'.")
+            return
+        
+        # Создаем экземпляры моделей
+        from models import ModelFactory
+        models = []
+        for model_data in models_data:
+            model = ModelFactory.create_model_from_db(model_data)
+            if model:
+                models.append(model)
+        
+        if not models:
+            QMessageBox.warning(self, "Ошибка", "Не удалось загрузить модели!")
+            return
+        
+        # Открываем диалог улучшения
+        from prompt_improvement_dialog import PromptImprovementDialog
+        dialog = PromptImprovementDialog(self, prompt_text, models)
+        
+        if dialog.exec_() == QDialog.Accepted:
+            selected_prompt = dialog.get_selected_prompt()
+            if selected_prompt:
+                self.prompt_text.setPlainText(selected_prompt)
+                self.statusBar().showMessage("Промт обновлен")
     
     def on_new_prompt(self):
         """Создать новый промт"""

@@ -86,20 +86,23 @@ class MarkdownViewDialog(QDialog):
                         background-color: #ffffff !important;
                     }}
                     h1 {{
-                        color: #2c3e50;
+                        color: #000000 !important;
                         border-bottom: 3px solid #3498db;
                         padding-bottom: 10px;
                         margin-top: 0;
                     }}
                     h2 {{
-                        color: #34495e;
+                        color: #000000 !important;
                         border-bottom: 2px solid #ecf0f1;
                         padding-bottom: 8px;
                         margin-top: 30px;
                     }}
                     h3 {{
-                        color: #7f8c8d;
+                        color: #000000 !important;
                         margin-top: 25px;
+                    }}
+                    h4, h5, h6 {{
+                        color: #000000 !important;
                     }}
                     code {{
                         background-color: #f4f4f4 !important;
@@ -126,26 +129,30 @@ class MarkdownViewDialog(QDialog):
                         border-left: 4px solid #3498db;
                         margin: 0;
                         padding-left: 20px;
-                        color: #7f8c8d;
+                        color: #000000 !important;
                         font-style: italic;
+                        background-color: #f9f9f9;
                     }}
                     table {{
                         border-collapse: collapse;
                         width: 100%;
                         margin: 20px 0;
                     }}
-                    th, td {{
+                    th,                     td {{
                         border: 1px solid #ddd;
                         padding: 12px;
                         text-align: left;
+                        color: #000000 !important;
+                        background-color: #ffffff !important;
                     }}
                     th {{
                         background-color: #3498db;
                         color: white;
                         font-weight: bold;
                     }}
-                    tr:nth-child(even) {{
-                        background-color: #f9f9f9;
+                    tr:nth-child(even) td {{
+                        background-color: #f9f9f9 !important;
+                        color: #000000 !important;
                     }}
                     a {{
                         color: #3498db;
@@ -160,14 +167,37 @@ class MarkdownViewDialog(QDialog):
                         margin: 30px 0;
                     }}
                     strong {{
-                        color: #2c3e50;
+                        color: #000000 !important;
                         font-weight: 600;
+                    }}
+                    em {{
+                        color: #000000 !important;
                     }}
                     ul, ol {{
                         padding-left: 30px;
                     }}
                     li {{
                         margin: 5px 0;
+                        color: #000000 !important;
+                    }}
+                    span {{
+                        color: #000000 !important;
+                    }}
+                    /* Исключение для цветных блоков кода с подсветкой синтаксиса */
+                    pre code.hljs,
+                    pre code[class*="language-"],
+                    .codehilite code,
+                    .highlight code {{
+                        background-color: transparent !important;
+                        color: inherit !important;
+                    }}
+                    /* Блоки кода с подсветкой сохраняют свои цвета */
+                    pre.hljs,
+                    pre[class*="language-"],
+                    .codehilite pre,
+                    .highlight pre {{
+                        background-color: #2c3e50 !important;
+                        color: #ecf0f1 !important;
                     }}
                 </style>
             </head>
@@ -189,6 +219,11 @@ class MarkdownViewDialog(QDialog):
                         line-height: 1.6;
                         padding: 20px;
                         white-space: pre-wrap;
+                        color: #000000 !important;
+                        background-color: #ffffff !important;
+                    }}
+                    h2, p {{
+                        color: #000000 !important;
                     }}
                 </style>
             </head>
