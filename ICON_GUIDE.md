@@ -138,3 +138,4 @@ img.save('app.ico', format='ICO', sizes=sizes)
 - [Генератор иконок из текста](https://www.favicon-generator.org/)
 
 
+
