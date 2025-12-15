@@ -182,6 +182,7 @@ class MainWindow(QMainWindow):
         
         self.init_ui()
         self.load_prompts()
+        self.apply_settings()  # Применяем настройки при запуске
     
     def init_ui(self):
         """Инициализация интерфейса"""
@@ -290,6 +291,10 @@ class MainWindow(QMainWindow):
         # Меню "Настройки"
         settings_menu = menubar.addMenu("Настройки")
         settings_menu.addAction("Настройки", self.on_settings)
+        
+        # Меню "Справка"
+        help_menu = menubar.addMenu("Справка")
+        help_menu.addAction("О программе", self.on_about)
     
     def load_prompts(self):
         """Загрузить список промтов в выпадающий список"""
@@ -661,7 +666,97 @@ class MainWindow(QMainWindow):
     
     def on_settings(self):
         """Настройки программы"""
-        QMessageBox.information(self, "Информация", "Функция настроек будет реализована позже")
+        from dialogs import SettingsDialog
+        dialog = SettingsDialog(self, self.db)
+        if dialog.exec_() == QDialog.Accepted:
+            dialog.save_settings()
+            self.apply_settings()  # Применяем настройки сразу после сохранения
+            QMessageBox.information(self, "Успех", "Настройки сохранены!")
+    
+    def apply_settings(self):
+        """Применить настройки темы и размера шрифта"""
+        if not self.db:
+            return
+        
+        # Применяем тему
+        theme = self.db.get_setting("theme", "light")
+        if theme == "dark":
+            self.setStyleSheet("""
+                QMainWindow {
+                    background-color: #2b2b2b;
+                    color: #ffffff;
+                }
+                QWidget {
+                    background-color: #2b2b2b;
+                    color: #ffffff;
+                }
+                QTextEdit, QLineEdit, QComboBox {
+                    background-color: #3c3c3c;
+                    color: #ffffff;
+                    border: 1px solid #555555;
+                }
+                QPushButton {
+                    background-color: #404040;
+                    color: #ffffff;
+                    border: 1px solid #555555;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    background-color: #505050;
+                }
+                QPushButton:pressed {
+                    background-color: #353535;
+                }
+                QTableWidget {
+                    background-color: #3c3c3c;
+                    color: #ffffff;
+                    gridline-color: #555555;
+                }
+                QHeaderView::section {
+                    background-color: #404040;
+                    color: #ffffff;
+                    padding: 5px;
+                    border: 1px solid #555555;
+                }
+                QLabel {
+                    color: #ffffff;
+                }
+                QProgressBar {
+                    border: 1px solid #555555;
+                    background-color: #3c3c3c;
+                    text-align: center;
+                }
+                QProgressBar::chunk {
+                    background-color: #0078d4;
+                }
+            """)
+        else:
+            # Светлая тема (сброс стилей)
+            self.setStyleSheet("")
+        
+        # Применяем размер шрифта
+        font_size = self.db.get_setting("font_size", "10")
+        try:
+            font_size_int = int(font_size)
+            font = QFont()
+            font.setPointSize(font_size_int)
+            self.setFont(font)
+            # Применяем шрифт ко всем виджетам
+            self._apply_font_to_widgets(self, font)
+        except ValueError:
+            pass
+    
+    def _apply_font_to_widgets(self, widget, font):
+        """Рекурсивно применить шрифт ко всем виджетам"""
+        widget.setFont(font)
+        for child in widget.findChildren(QWidget):
+            child.setFont(font)
+    
+    def on_about(self):
+        """О программе"""
+        from dialogs import AboutDialog
+        dialog = AboutDialog(self)
+        dialog.exec_()
     
     def set_app_icon(self):
         """Установить иконку приложения"""

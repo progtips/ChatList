@@ -137,3 +137,4 @@ img.save('app.ico', format='ICO', sizes=sizes)
 - [Бесплатные иконки](https://www.flaticon.com/)
 - [Генератор иконок из текста](https://www.favicon-generator.org/)
 
+

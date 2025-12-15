@@ -4,9 +4,10 @@ from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QTextEdit,
     QPushButton, QTableWidget, QTableWidgetItem, QDialogButtonBox,
     QAbstractItemView, QHeaderView, QComboBox, QCheckBox, QMessageBox,
-    QFileDialog
+    QFileDialog, QSpinBox
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
 import json
 from datetime import datetime
 
@@ -529,4 +530,141 @@ class ResultsDialog(QDialog):
                 QMessageBox.information(self, "Успех", "Результат удален!")
             else:
                 QMessageBox.warning(self, "Ошибка", "Не удалось удалить результат!")
+
+
+class SettingsDialog(QDialog):
+    """Диалог настроек программы"""
+    
+    def __init__(self, parent=None, db=None):
+        super().__init__(parent)
+        self.db = db
+        self.setWindowTitle("Настройки")
+        self.setMinimumSize(400, 250)
+        self.init_ui()
+        self.load_settings()
+    
+    def init_ui(self):
+        layout = QVBoxLayout()
+        
+        # Тема оформления
+        theme_layout = QVBoxLayout()
+        theme_layout.addWidget(QLabel("Тема оформления:"))
+        self.theme_combo = QComboBox()
+        self.theme_combo.addItems(["Светлая", "Темная"])
+        theme_layout.addWidget(self.theme_combo)
+        layout.addLayout(theme_layout)
+        
+        # Размер шрифта
+        font_layout = QVBoxLayout()
+        font_layout.addWidget(QLabel("Размер шрифта (8-24):"))
+        font_hbox = QHBoxLayout()
+        self.font_size_spin = QSpinBox()
+        self.font_size_spin.setMinimum(8)
+        self.font_size_spin.setMaximum(24)
+        self.font_size_spin.setValue(10)
+        font_hbox.addWidget(self.font_size_spin)
+        font_hbox.addStretch()
+        font_layout.addLayout(font_hbox)
+        layout.addLayout(font_layout)
+        
+        layout.addStretch()
+        
+        # Кнопки
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+        
+        self.setLayout(layout)
+    
+    def load_settings(self):
+        """Загрузить текущие настройки из БД"""
+        if not self.db:
+            return
+        
+        # Загружаем тему
+        theme = self.db.get_setting("theme", "light")
+        if theme == "dark":
+            self.theme_combo.setCurrentIndex(1)
+        else:
+            self.theme_combo.setCurrentIndex(0)
+        
+        # Загружаем размер шрифта
+        font_size = self.db.get_setting("font_size", "10")
+        try:
+            self.font_size_spin.setValue(int(font_size))
+        except ValueError:
+            self.font_size_spin.setValue(10)
+    
+    def get_settings(self) -> dict:
+        """Получить выбранные настройки"""
+        theme = "dark" if self.theme_combo.currentIndex() == 1 else "light"
+        font_size = str(self.font_size_spin.value())
+        return {
+            "theme": theme,
+            "font_size": font_size
+        }
+    
+    def save_settings(self):
+        """Сохранить настройки в БД"""
+        if not self.db:
+            return
+        
+        settings = self.get_settings()
+        self.db.set_setting("theme", settings["theme"])
+        self.db.set_setting("font_size", settings["font_size"])
+
+
+class AboutDialog(QDialog):
+    """Диалог 'О программе'"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("О программе")
+        self.setMinimumSize(400, 300)
+        self.init_ui()
+    
+    def init_ui(self):
+        layout = QVBoxLayout()
+        
+        # Название программы
+        title_label = QLabel("ChatList")
+        title_font = QFont()
+        title_font.setPointSize(16)
+        title_font.setBold(True)
+        title_label.setFont(title_font)
+        title_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title_label)
+        
+        # Версия
+        version_label = QLabel("Версия 1.0.0")
+        version_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(version_label)
+        
+        layout.addSpacing(20)
+        
+        # Описание
+        description = QLabel(
+            "ChatList — это Python-приложение для сравнения ответов\n"
+            "нескольких нейросетей на один и тот же промт.\n\n"
+            "Возможности:\n"
+            "• Отправка промта в несколько моделей одновременно\n"
+            "• Сохранение результатов для сравнения\n"
+            "• Управление промтами и моделями\n"
+            "• AI-ассистент для улучшения промтов\n"
+            "• Экспорт результатов в Markdown и JSON\n\n"
+            "Разработано с использованием PyQt5 и SQLite."
+        )
+        description.setAlignment(Qt.AlignLeft)
+        description.setWordWrap(True)
+        layout.addWidget(description)
+        
+        layout.addStretch()
+        
+        # Кнопка закрытия
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok)
+        buttons.accepted.connect(self.accept)
+        layout.addWidget(buttons)
+        
+        self.setLayout(layout)
 
