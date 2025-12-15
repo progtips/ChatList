@@ -320,3 +320,6 @@ class PromptAssistant:
         # Ограничиваем количество вариантов
         return variants[:expected_count]
 
+
+
+

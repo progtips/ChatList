@@ -9,10 +9,12 @@ from PyQt5.QtWidgets import (
     QProgressBar
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPoint
-from PyQt5.QtGui import QFont, QColor
+from PyQt5.QtGui import QFont, QColor, QIcon
+from PyQt5.QtWidgets import QApplication
 from db import Database
 from network import NetworkManager
 import logging
+import os
 
 
 class SendRequestThread(QThread):
@@ -185,6 +187,9 @@ class MainWindow(QMainWindow):
         """Инициализация интерфейса"""
         self.setWindowTitle("ChatList - Сравнение ответов нейросетей")
         self.setGeometry(100, 100, 1200, 800)
+        
+        # Установка иконки приложения
+        self.set_app_icon()
         
         # Создаем центральный виджет
         central_widget = QWidget()
@@ -657,6 +662,27 @@ class MainWindow(QMainWindow):
     def on_settings(self):
         """Настройки программы"""
         QMessageBox.information(self, "Информация", "Функция настроек будет реализована позже")
+    
+    def set_app_icon(self):
+        """Установить иконку приложения"""
+        # Ищем иконку в разных возможных местах
+        icon_paths = [
+            'app.ico',
+            'icon.ico',
+            'assets/app.ico',
+            'assets/icon.ico',
+            'resources/app.ico',
+            'resources/icon.ico'
+        ]
+        
+        for icon_path in icon_paths:
+            if os.path.exists(icon_path):
+                self.setWindowIcon(QIcon(icon_path))
+                QApplication.setWindowIcon(QIcon(icon_path))  # Устанавливаем для всего приложения
+                logging.info(f"Иконка загружена: {icon_path}")
+                return
+        
+        logging.warning("Иконка приложения не найдена. Создайте файл app.ico или icon.ico в корне проекта.")
     
     def closeEvent(self, event):
         """Обработчик закрытия приложения"""

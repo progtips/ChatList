@@ -165,6 +165,7 @@ ChatList/
 ├── PROJECT.md           # Спецификация проекта
 ├── PLAN.md              # План реализации
 ├── DATABASE.md          # Схема базы данных
+├── ICON_GUIDE.md        # Руководство по созданию иконки
 └── README.md            # Этот файл
 ```
 
@@ -189,14 +190,18 @@ python test_models.py
 pip install -r requirements.txt
 ```
 
-2. Запустите скрипт сборки:
+2. **(Опционально) Добавьте иконку приложения:**
+   - Создайте файл `app.ico` или `icon.ico` в корне проекта
+   - Подробная инструкция в файле `ICON_GUIDE.md`
+
+3. Запустите скрипт сборки:
 ```powershell
 .\build.ps1
 ```
 
 Или выполните команду вручную:
 ```powershell
-pyinstaller --onefile --windowed --name "ChatList" main.py
+pyinstaller --onefile --windowed --name "ChatList" --icon="app.ico" main.py
 ```
 
 Исполняемый файл будет создан в папке `dist\ChatList.exe`.
@@ -205,6 +210,7 @@ pyinstaller --onefile --windowed --name "ChatList" main.py
 - `--onefile` - создает один исполняемый файл
 - `--windowed` - скрывает консольное окно (для GUI приложений)
 - `--name "ChatList"` - имя выходного файла
+- `--icon="app.ico"` - путь к файлу иконки (опционально)
 
 ## Логирование
 
