@@ -50,7 +50,7 @@ Copy-Item "dist\ChatList.exe" -Destination "release\ChatList-Portable.exe" -Forc
 1. **Перейдите на страницу релизов:**
    - Откройте ваш репозиторий на GitHub
    - Нажмите на "Releases" в правой панели
-   - Или перейдите по адресу: `https://github.com/ваш-username/ChatList/releases`
+   - Или перейдите по адресу: `https://github.com/progtips/ChatList/releases`
 
 2. **Создайте новый релиз:**
    - Нажмите "Draft a new release" или "Create a new release"
@@ -170,7 +170,7 @@ git push origin v1.0.0
 1. ✅ Файл установщика загружен и доступен для скачивания
 2. ✅ Описание релиза отображается корректно
 3. ✅ Тег создан и связан с релизом
-4. ✅ Страница релиза доступна по адресу: `https://github.com/ваш-username/ChatList/releases/tag/v{версия}`
+4. ✅ Страница релиза доступна по адресу: `https://github.com/progtips/ChatList/releases/tag/v{версия}`
 
 ## Откат релиза
 
