@@ -3,6 +3,27 @@
 Write-Host "=== Создание установщика ChatList ===" -ForegroundColor Cyan
 Write-Host ""
 
+# Функция для чтения версии из version.py
+function Get-VersionFromPython {
+    if (-not (Test-Path "version.py")) {
+        Write-Host "❌ Ошибка: version.py не найден!" -ForegroundColor Red
+        exit 1
+    }
+    
+    $versionContent = Get-Content "version.py" -Raw
+    if ($versionContent -match '__version__\s*=\s*["'']([^"'']+)["'']') {
+        return $matches[1]
+    } else {
+        Write-Host "❌ Ошибка: не удалось найти __version__ в version.py!" -ForegroundColor Red
+        exit 1
+    }
+}
+
+# Получаем версию из version.py
+$appVersion = Get-VersionFromPython
+Write-Host "Версия приложения: $appVersion" -ForegroundColor Cyan
+Write-Host ""
+
 # Проверка необходимых файлов
 Write-Host "Проверка необходимых файлов..." -ForegroundColor Green
 
@@ -78,15 +99,30 @@ if (-not (Test-Path "installer")) {
 Write-Host "Создание установщика..." -ForegroundColor Cyan
 Write-Host ""
 
-# Компилируем установщик
-& $innoCompiler "setup.iss"
+# Создаем временный setup.iss с подставленной версией
+$setupContent = Get-Content "setup.iss" -Raw
+$setupContent = $setupContent -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$appVersion`""
+
+$tempSetupFile = "setup.temp.iss"
+$setupContent | Out-File -FilePath $tempSetupFile -Encoding UTF8 -NoNewline
+
+Write-Host "Используется версия: $appVersion" -ForegroundColor Green
+Write-Host ""
+
+# Компилируем установщик с временным файлом
+& $innoCompiler $tempSetupFile
+
+# Удаляем временный файл
+if (Test-Path $tempSetupFile) {
+    Remove-Item $tempSetupFile -Force
+}
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host ""
     Write-Host "✅ Установщик успешно создан!" -ForegroundColor Green
     Write-Host ""
     
-    $installerFile = "installer\ChatList-Setup-1.0.0.exe"
+    $installerFile = "installer\ChatList-Setup-$appVersion.exe"
     if (Test-Path $installerFile) {
         $fileSize = (Get-Item $installerFile).Length / 1MB
         Write-Host "Файл: $installerFile" -ForegroundColor Yellow

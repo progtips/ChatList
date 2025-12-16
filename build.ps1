@@ -3,6 +3,27 @@
 
 Write-Host "Создание исполняемого файла..." -ForegroundColor Green
 
+# Функция для чтения версии из version.py
+function Get-VersionFromPython {
+    if (-not (Test-Path "version.py")) {
+        Write-Host "⚠️  Предупреждение: version.py не найден, используется версия по умолчанию" -ForegroundColor Yellow
+        return "1.0.0"
+    }
+    
+    $versionContent = Get-Content "version.py" -Raw
+    if ($versionContent -match '__version__\s*=\s*["'']([^"'']+)["'']') {
+        return $matches[1]
+    } else {
+        Write-Host "⚠️  Предупреждение: не удалось найти __version__ в version.py, используется версия по умолчанию" -ForegroundColor Yellow
+        return "1.0.0"
+    }
+}
+
+# Получаем версию из version.py
+$appVersion = Get-VersionFromPython
+Write-Host "Версия приложения: $appVersion" -ForegroundColor Cyan
+Write-Host ""
+
 # Проверяем наличие иконки
 $iconPath = ""
 if (Test-Path "app.ico") {

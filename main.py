@@ -13,6 +13,7 @@ from PyQt5.QtGui import QFont, QColor, QIcon
 from PyQt5.QtWidgets import QApplication
 from db import Database
 from network import NetworkManager
+from version import __version__
 import logging
 import os
 
@@ -186,7 +187,7 @@ class MainWindow(QMainWindow):
     
     def init_ui(self):
         """Инициализация интерфейса"""
-        self.setWindowTitle("ChatList - Сравнение ответов нейросетей")
+        self.setWindowTitle(f"ChatList v{__version__} - Сравнение ответов нейросетей")
         self.setGeometry(100, 100, 1200, 800)
         
         # Установка иконки приложения
@@ -796,6 +797,9 @@ def main():
             logging.StreamHandler()
         ]
     )
+    
+    # Логируем версию при запуске
+    logging.info(f"ChatList версия {__version__} запущен")
     
     app = QApplication(sys.argv)
     window = MainWindow()

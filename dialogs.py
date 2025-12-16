@@ -10,6 +10,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 import json
 from datetime import datetime
+from version import __version__
 
 
 class PromptsManageDialog(QDialog):
@@ -637,7 +638,7 @@ class AboutDialog(QDialog):
         layout.addWidget(title_label)
         
         # Версия
-        version_label = QLabel("Версия 1.0.0")
+        version_label = QLabel(f"Версия {__version__}")
         version_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(version_label)
         

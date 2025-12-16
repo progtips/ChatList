@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ChatList - Программа для сравнения ответов нескольких нейросетей на один промт">
+    <meta name="keywords" content="AI, нейросети, ChatGPT, GPT-4, Claude, сравнение моделей">
+    <title>ChatList - Сравнение ответов нейросетей</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .features {
+            background: white;
+            padding: 4rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .screenshots {
+            background: #f8f9fa;
+            padding: 4rem 0;
+        }
+
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .screenshot-placeholder {
+            background: #ddd;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            color: #666;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .download {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 4rem 0;
+            color: white;
+            text-align: center;
+        }
+
+        .download h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .download-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem auto;
+            max-width: 600px;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">ChatList</div>
+            <ul class="nav-links">
+                <li><a href="#features">Возможности</a></li>
+                <li><a href="#download">Скачать</a></li>
+                <li><a href="https://github.com/progtips/ChatList" target="_blank">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>ChatList</h1>
+            <p>Сравнивайте ответы нескольких нейросетей на один промт</p>
+            <div class="cta-buttons">
+                <a href="#download" class="btn">Скачать сейчас</a>
+                <a href="https://github.com/progtips/ChatList" class="btn btn-secondary" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Возможности</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>Множественные модели</h3>
+                    <p>Отправляйте один промт в несколько нейросетей одновременно и сравнивайте их ответы</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <h3>Сохранение результатов</h3>
+                    <p>Сохраняйте промты и ответы в базу данных для дальнейшего анализа и сравнения</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Поиск и фильтрация</h3>
+                    <p>Быстрый поиск по промтам, моделям и результатам с удобной сортировкой</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📤</div>
+                    <h3>Экспорт данных</h3>
+                    <p>Экспортируйте результаты в Markdown или JSON для документирования и анализа</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI-ассистент</h3>
+                    <p>Автоматическое улучшение и переформулировка промтов с помощью AI</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>Гибкая настройка</h3>
+                    <p>Поддержка различных API: OpenAI, OpenRouter, DeepSeek, Groq и других</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="screenshots">
+        <div class="container">
+            <h2 class="section-title">Скриншоты</h2>
+            <div class="screenshot-grid">
+                <div class="screenshot-placeholder">
+                    <div>
+                        <p>📸 Скриншот главного окна</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Добавьте скриншот интерфейса</p>
+                    </div>
+                </div>
+                <div class="screenshot-placeholder">
+                    <div>
+                        <p>📸 Скриншот результатов</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Добавьте скриншот сравнения</p>
+                    </div>
+                </div>
+                <div class="screenshot-placeholder">
+                    <div>
+                        <p>📸 Скриншот управления</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Добавьте скриншот настроек</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="download" id="download">
+        <div class="container">
+            <h2>Скачать ChatList</h2>
+            <div class="version-badge">Версия 1.0.0</div>
+            <div class="download-info">
+                <h3>Windows</h3>
+                <p>Установщик для Windows (рекомендуется)</p>
+                <a href="https://github.com/progtips/ChatList/releases/latest/download/ChatList-Setup-1.0.0.exe" class="btn" style="margin-top: 1rem;">
+                    Скачать установщик
+                </a>
+                <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.9;">
+                    Или скачайте <a href="https://github.com/progtips/ChatList/releases" style="color: white; text-decoration: underline;">портативную версию</a>
+                </p>
+            </div>
+            <div style="margin-top: 2rem;">
+                <p>Требования: Windows 10 или новее</p>
+                <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.5rem;">
+                    <a href="https://github.com/progtips/ChatList/releases" style="color: white; text-decoration: underline;">Все версии и релизы</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="https://github.com/progtips/ChatList">GitHub</a>
+                <a href="https://github.com/progtips/ChatList/issues">Сообщить об ошибке</a>
+                <a href="https://github.com/progtips/ChatList/blob/main/LICENSE">Лицензия</a>
+            </div>
+            <p style="margin-top: 1rem; opacity: 0.8;">
+                © 2024 ChatList. Сделано с ❤️ для сравнения нейросетей
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
+
