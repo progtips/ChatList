@@ -244,3 +244,4 @@ DisableDirPage=yes
 - [Форум Inno Setup](https://groups.google.com/g/innosetup)
 
 
+
