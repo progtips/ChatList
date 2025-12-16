@@ -139,3 +139,4 @@ img.save('app.ico', format='ICO', sizes=sizes)
 
 
 
+
